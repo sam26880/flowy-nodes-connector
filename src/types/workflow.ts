@@ -7,7 +7,13 @@ export interface Node {
   position: { x: number; y: number };
   options?: string[];
   color?: string;
-  customSettings?: Record<string, any>;
+  customSettings?: {
+    assignedTo?: string[];
+    description?: string;
+    dueDate?: string;
+    codeReference?: string;
+    attachments?: string;
+  };
 }
 
 export interface Connection {

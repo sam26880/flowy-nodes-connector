@@ -104,6 +104,29 @@
          hover:scale-150 transition-transform duration-200;
 }
 
+/* Settings panel transitions */
+.settings-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.settings-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.settings-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.settings-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 300ms, transform 300ms;
+}
+
 /* Dialog animations */
 .dialog-enter {
   opacity: 0;

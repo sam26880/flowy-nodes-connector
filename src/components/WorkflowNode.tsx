@@ -3,11 +3,10 @@ import React, { useState } from 'react';
 import { Node } from '@/types/workflow';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { X, GripVertical, Plus, MoreVertical, Settings } from 'lucide-react';
+import { X, GripVertical, Plus, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import NodeSettings from '@/components/NodeSettings';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 
 interface WorkflowNodeProps {
   node: Node;
@@ -22,6 +21,7 @@ interface WorkflowNodeProps {
   onOptionChange?: (id: string, index: number, value: string) => void;
   onOptionRemove?: (id: string, index: number) => void;
   onDelete: (id: string) => void;
+  onSettingsChange?: (id: string, settings: Node['customSettings']) => void;
 }
 
 const WorkflowNode: React.FC<WorkflowNodeProps> = ({
@@ -36,17 +36,13 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
   onAddOption,
   onOptionChange,
   onOptionRemove,
-  onDelete
+  onDelete,
+  onSettingsChange
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [nodeColor, setNodeColor] = useState<string>(() => {
-    if (node.type === 'greeting') return 'bg-blue-50';
-    if (node.type === 'question') return 'bg-green-50';
-    return 'bg-yellow-50';
-  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
-  const nodeColorClass = {
+  const nodeColorClass = node.color || {
     greeting: 'bg-node-greeting border-blue-200',
     question: 'bg-node-question border-green-200',
     response: 'bg-node-response border-yellow-200'
@@ -57,8 +53,8 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
     onDragStart(e, node.id);
   };
 
-  const handleColorChange = (color: string) => {
-    setNodeColor(color);
+  const handleSettingsSave = (nodeId: string, updatedSettings: Node['customSettings']) => {
+    onSettingsChange?.(nodeId, updatedSettings);
   };
 
   return (
@@ -123,10 +119,9 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
                   <Button
                     variant="ghost" 
                     className="justify-start h-8 px-2 text-xs"
-                    onClick={() => setIsConfigOpen(true)}
+                    onClick={() => setIsSettingsOpen(true)}
                   >
-                    <Settings size={14} className="mr-2" />
-                    Configure
+                    Configure Node
                   </Button>
                   <Button
                     variant="ghost" 
@@ -190,67 +185,23 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
             onStartConnection(node.id);
           }}
         />
+
+        {/* Show indicator if node has custom settings */}
+        {node.customSettings && Object.keys(node.customSettings).some(key => 
+          node.customSettings?.[key] && 
+          (Array.isArray(node.customSettings[key]) ? node.customSettings[key].length > 0 : true)
+        ) && (
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border border-white" />
+        )}
       </div>
 
-      <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Configure {node.title}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Node Type</label>
-              <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  variant={node.type === 'greeting' ? 'default' : 'outline'} 
-                  className="h-8"
-                  onClick={() => {}} // This would be handled by an onTypeChange prop
-                >
-                  Greeting
-                </Button>
-                <Button 
-                  variant={node.type === 'question' ? 'default' : 'outline'} 
-                  className="h-8"
-                  onClick={() => {}} // This would be handled by an onTypeChange prop
-                >
-                  Question
-                </Button>
-                <Button 
-                  variant={node.type === 'response' ? 'default' : 'outline'} 
-                  className="h-8"
-                  onClick={() => {}} // This would be handled by an onTypeChange prop
-                >
-                  Response
-                </Button>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Background Color</label>
-              <div className="flex flex-wrap gap-2">
-                {['bg-blue-50', 'bg-green-50', 'bg-yellow-50', 'bg-purple-50', 'bg-pink-50', 'bg-gray-50'].map((color) => (
-                  <div 
-                    key={color}
-                    className={`w-6 h-6 rounded-full cursor-pointer border ${color} ${nodeColor === color ? 'ring-2 ring-primary' : ''}`}
-                    onClick={() => handleColorChange(color)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsConfigOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={() => setIsConfigOpen(false)}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NodeSettings
+        node={node}
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        onSave={handleSettingsSave}
+        onDelete={onDelete}
+      />
     </>
   );
 };
