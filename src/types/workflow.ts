@@ -6,6 +6,8 @@ export interface Node {
   content: string;
   position: { x: number; y: number };
   options?: string[];
+  color?: string;
+  customSettings?: Record<string, any>;
 }
 
 export interface Connection {
