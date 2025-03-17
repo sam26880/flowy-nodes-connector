@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Node } from '@/types/workflow';
 import { Button } from "@/components/ui/button";
@@ -57,14 +56,12 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
     onSettingsChange?.(nodeId, updatedSettings);
   };
 
-  // Check if node has any custom settings
-  const hasCustomSettings = node.customSettings && (
-    (node.customSettings.assignedTo && node.customSettings.assignedTo.length > 0) ||
-    (node.customSettings.description && node.customSettings.description.length > 0) ||
-    node.customSettings.dueDate ||
-    (node.customSettings.codeReferences && node.customSettings.codeReferences.length > 0) ||
-    (node.customSettings.attachments && node.customSettings.attachments.length > 0)
-  );
+  const hasCustomSettings = node.customSettings && 
+    node.customSettings.tasks && 
+    node.customSettings.tasks.length > 0 &&
+    node.customSettings.tasks.some(task => 
+      task.code || task.assignedTo || task.description || task.dueDate || task.attachWiki
+    );
 
   return (
     <>
@@ -195,7 +192,6 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
           }}
         />
 
-        {/* Show indicator if node has custom settings */}
         {hasCustomSettings && (
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border border-white" />
         )}

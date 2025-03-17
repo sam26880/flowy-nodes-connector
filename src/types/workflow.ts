@@ -8,11 +8,14 @@ export interface Node {
   options?: string[];
   color?: string;
   customSettings?: {
-    assignedTo?: string[];
-    description?: string;
-    dueDate?: string;
-    codeReferences?: Array<{ name: string; url: string }>;
-    attachments?: string[];
+    tasks: Array<{
+      code: string;
+      codeUrl?: string;
+      assignedTo: string;
+      description: string;
+      dueDate: string;
+      attachWiki: string;
+    }>;
   };
 }
 
