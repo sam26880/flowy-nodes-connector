@@ -11,8 +11,8 @@ export interface Node {
     assignedTo?: string[];
     description?: string;
     dueDate?: string;
-    codeReference?: string;
-    attachments?: string;
+    codeReferences?: Array<{ name: string; url: string }>;
+    attachments?: string[];
   };
 }
 

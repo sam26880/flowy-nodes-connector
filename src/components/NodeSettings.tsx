@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Trash2, Save, Calendar, User, FileText, Code, Paperclip, Plus } from 'lucide-react';
+import { X, Trash2, Save, Calendar, User, FileText, Code, Paperclip, Plus, Trash, Link } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Node } from '@/types/workflow';
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,14 @@ import {
   SheetTitle,
   SheetFooter,
 } from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface NodeSettingsProps {
   node: Node;
@@ -41,12 +49,14 @@ const NodeSettings: React.FC<NodeSettingsProps> = ({
       assignedTo: [],
       description: '',
       dueDate: '',
-      codeReference: '',
-      attachments: ''
+      codeReferences: [],
+      attachments: []
     }
   );
   
   const [assignee, setAssignee] = useState<string>('');
+  const [newCodeRef, setNewCodeRef] = useState({ name: '', url: '' });
+  const [newAttachment, setNewAttachment] = useState('');
   
   const handleSave = () => {
     onSave(node.id, settings);
@@ -67,6 +77,40 @@ const NodeSettings: React.FC<NodeSettingsProps> = ({
     setSettings({
       ...settings,
       assignedTo: settings.assignedTo?.filter(a => a !== name)
+    });
+  };
+
+  const handleAddCodeReference = () => {
+    if (newCodeRef.name && newCodeRef.url) {
+      setSettings({
+        ...settings,
+        codeReferences: [...(settings.codeReferences || []), { ...newCodeRef }]
+      });
+      setNewCodeRef({ name: '', url: '' });
+    }
+  };
+
+  const handleRemoveCodeReference = (index: number) => {
+    setSettings({
+      ...settings,
+      codeReferences: settings.codeReferences?.filter((_, i) => i !== index)
+    });
+  };
+
+  const handleAddAttachment = () => {
+    if (newAttachment && !settings.attachments?.includes(newAttachment)) {
+      setSettings({
+        ...settings,
+        attachments: [...(settings.attachments || []), newAttachment]
+      });
+      setNewAttachment('');
+    }
+  };
+
+  const handleRemoveAttachment = (attachment: string) => {
+    setSettings({
+      ...settings,
+      attachments: settings.attachments?.filter(a => a !== attachment)
     });
   };
 
@@ -111,18 +155,76 @@ const NodeSettings: React.FC<NodeSettingsProps> = ({
             </div>
           </div>
           
-          {/* Code Reference */}
+          {/* Code References */}
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
               <Code size={16} />
-              Code Reference
+              Code References
             </label>
-            <Input 
-              placeholder="Enter code reference..."
-              value={settings.codeReference || ''}
-              onChange={(e) => setSettings({...settings, codeReference: e.target.value})}
-              className="h-9"
-            />
+            
+            {settings.codeReferences && settings.codeReferences.length > 0 && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px]">Name</TableHead>
+                    <TableHead>URL</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {settings.codeReferences.map((codeRef, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="py-2">{codeRef.name}</TableCell>
+                      <TableCell className="py-2 truncate max-w-[180px]">
+                        <a href={codeRef.url} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline truncate block">
+                          {codeRef.url}
+                        </a>
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-red-500"
+                          onClick={() => handleRemoveCodeReference(index)}
+                        >
+                          <Trash size={14} />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+            
+            <div className="flex gap-2 items-end">
+              <div className="space-y-1 flex-1">
+                <label className="text-xs text-muted-foreground">Name</label>
+                <Input 
+                  value={newCodeRef.name}
+                  onChange={(e) => setNewCodeRef({...newCodeRef, name: e.target.value})}
+                  placeholder="e.g. API Endpoint"
+                  className="h-8"
+                />
+              </div>
+              <div className="space-y-1 flex-1">
+                <label className="text-xs text-muted-foreground">URL</label>
+                <Input 
+                  value={newCodeRef.url}
+                  onChange={(e) => setNewCodeRef({...newCodeRef, url: e.target.value})}
+                  placeholder="https://..."
+                  className="h-8"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 shrink-0"
+                onClick={handleAddCodeReference}
+              >
+                <Plus size={14} className="mr-1" />
+                Add
+              </Button>
+            </div>
           </div>
           
           {/* Assigned To */}
@@ -131,22 +233,6 @@ const NodeSettings: React.FC<NodeSettingsProps> = ({
               <User size={16} />
               Assign Task To
             </label>
-            <div className="flex gap-2">
-              <Input 
-                placeholder="Enter assignee name..."
-                value={assignee}
-                onChange={(e) => setAssignee(e.target.value)}
-                className="h-9 flex-1"
-              />
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-9 w-9"
-                onClick={handleAddAssignee}
-              >
-                <Plus size={16} />
-              </Button>
-            </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {settings.assignedTo?.map(name => (
                 <div 
@@ -162,6 +248,23 @@ const NodeSettings: React.FC<NodeSettingsProps> = ({
                   </button>
                 </div>
               ))}
+            </div>
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Enter assignee name..."
+                value={assignee}
+                onChange={(e) => setAssignee(e.target.value)}
+                className="h-8 flex-1"
+              />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 shrink-0"
+                onClick={handleAddAssignee}
+              >
+                <Plus size={14} className="mr-1" />
+                Add
+              </Button>
             </div>
           </div>
           
@@ -189,7 +292,7 @@ const NodeSettings: React.FC<NodeSettingsProps> = ({
               value={settings.dueDate || ''} 
               onValueChange={(value) => setSettings({...settings, dueDate: value})}
             >
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-8">
                 <SelectValue placeholder="Select due date" />
               </SelectTrigger>
               <SelectContent>
@@ -206,22 +309,53 @@ const NodeSettings: React.FC<NodeSettingsProps> = ({
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
               <Paperclip size={16} />
-              Attach Wiki
+              Attach Wikis
             </label>
-            <Select 
-              value={settings.attachments || ''} 
-              onValueChange={(value) => setSettings({...settings, attachments: value})}
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Select attachment" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="patient-guide">Patient Guide</SelectItem>
-                <SelectItem value="treatment-plan">Treatment Plan</SelectItem>
-                <SelectItem value="billing-info">Billing Information</SelectItem>
-                <SelectItem value="aftercare">Aftercare Instructions</SelectItem>
-              </SelectContent>
-            </Select>
+            
+            {settings.attachments && settings.attachments.length > 0 && (
+              <div className="space-y-2">
+                {settings.attachments.map((attachment, index) => (
+                  <div key={index} className="flex items-center justify-between bg-secondary/50 rounded-md p-2">
+                    <span className="text-sm">{attachment}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-red-500"
+                      onClick={() => handleRemoveAttachment(attachment)}
+                    >
+                      <X size={14} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <Select 
+                value={newAttachment} 
+                onValueChange={setNewAttachment}
+              >
+                <SelectTrigger className="h-8 flex-1">
+                  <SelectValue placeholder="Select attachment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Patient Guide">Patient Guide</SelectItem>
+                  <SelectItem value="Treatment Plan">Treatment Plan</SelectItem>
+                  <SelectItem value="Billing Information">Billing Information</SelectItem>
+                  <SelectItem value="Aftercare Instructions">Aftercare Instructions</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 shrink-0"
+                onClick={handleAddAttachment}
+                disabled={!newAttachment}
+              >
+                <Plus size={14} className="mr-1" />
+                Add
+              </Button>
+            </div>
           </div>
           
           {/* Background Color */}

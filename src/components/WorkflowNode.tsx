@@ -57,6 +57,15 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
     onSettingsChange?.(nodeId, updatedSettings);
   };
 
+  // Check if node has any custom settings
+  const hasCustomSettings = node.customSettings && (
+    (node.customSettings.assignedTo && node.customSettings.assignedTo.length > 0) ||
+    (node.customSettings.description && node.customSettings.description.length > 0) ||
+    node.customSettings.dueDate ||
+    (node.customSettings.codeReferences && node.customSettings.codeReferences.length > 0) ||
+    (node.customSettings.attachments && node.customSettings.attachments.length > 0)
+  );
+
   return (
     <>
       <div
@@ -187,10 +196,7 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
         />
 
         {/* Show indicator if node has custom settings */}
-        {node.customSettings && Object.keys(node.customSettings).some(key => 
-          node.customSettings?.[key] && 
-          (Array.isArray(node.customSettings[key]) ? node.customSettings[key].length > 0 : true)
-        ) && (
+        {hasCustomSettings && (
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border border-white" />
         )}
       </div>
